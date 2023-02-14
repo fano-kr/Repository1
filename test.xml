@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WF_site">
+	<select id="RequestInfoGetAction_CF_USER_REQUEST_site" parameterType="hashMap" resultType="ExpressMap">
+		SELECT Q.*
+		
+      FROM (
+    SELECT 
+       A.*
+    
+    ,CASE WHEN
+    (SELECT BB.COMMON_NAME
+      FROM CF_USER_REQUEST AA
+		   left outer join JF_COMMON_CODE BB
+		   on AA.SATISFACTION = BB.COMMON_CODE and BB.GROUP_CODE = 'SITE_SATISFACTION'
+     WHERE AA.INST_ID = #{PAR_INST_ID}) IS NULL
+       THEN ''
+       ELSE
+    (SELECT BB.COMMON_NAME
+      FROM CF_USER_REQUEST AA
+      	   left outer join JF_COMMON_CODE BB
+		   on AA.SATISFACTION = BB.COMMON_CODE and BB.GROUP_CODE = 'SITE_SATISFACTION'
+     WHERE AA.INST_ID = #{PAR_INST_ID})
+     END AS SATISFACTION_NM
+     
+     , (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='PRIORITY_GROUP' AND COMMON_CODE=A.CHANGE_TYPE_CD  )  CHANGE_TYPE_CD_NM
+     , (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='PRIORITY_GROUP' AND COMMON_CODE=A.PRIORITY_CD  )  PRIORITY_CD_NM
+     
+     , C.USER_NM REQUEST_USER_NM
+     , E.INST_STATUS_CD
+     , F.BIZ_NM AS BIZ_ID_NM
+     , E.PROC_ID
+     , GET_FULL_DEPT_NAME(A.RECEIVE_DEP_ID ) AS RECEIVE_DEP_ID_NM
+     , GET_FULL_DEPT_NAME(A.REQUEST_DEP_ID ) AS REQUEST_DEP_ID_NM
+    
+                         
+      FROM    CF_USER_REQUEST A
+      		  left outer join C_BIZ F
+			  on A.BIZ_ID = F.BIZ_ID,
+      		  C_USER C, WF_PROC_INSTANCE E
+    WHERE     A.REQUEST_USER_ID = C.USER_ID
+       AND    A.INST_ID = E.INST_ID
+       AND    A.INST_ID =  #{PAR_INST_ID} 
+    ) Q 
+	  
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_TEST_DETAIL"
+		parameterType="hashMap" resultType="ExpressMap">
+	SELECT * FROM CF_USER_TEST_DETAIL WHERE INST_ID=#{INST_ID} ORDER BY TEST_DETAIL_SEQ		
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_CHANGE"
+		parameterType="hashMap" resultType="ExpressMap">
+    SELECT A.*, B.COMMON_NAME AS DBA_CHECK_CD_NM,
+			GET_USER_NAME(A.WRITER) as USER_NM,
+			TO_CHAR(TO_DATE(A.RVW_DT_FROM), 'YYYY-MM-DD') AS RVW_DT_FROM_VIEW,
+			TO_CHAR(TO_DATE(A.RVW_DT_TO), 'YYYY-MM-DD') AS RVW_DT_TO_VIEW,
+			TO_CHAR(TO_DATE(A.DEP_DT_FROM), 'YYYY-MM-DD') AS DEP_DT_FROM_VIEW,
+			TO_CHAR(TO_DATE(A.DEP_DT_TO), 'YYYY-MM-DD') AS DEP_DT_TO_VIEW,
+			TO_CHAR(TO_DATE(A.TEST_DT_FROM), 'YYYY-MM-DD') AS TEST_DT_FROM_VIEW,
+			TO_CHAR(TO_DATE(A.TEST_DT_TO), 'YYYY-MM-DD') AS TEST_DT_TO_VIEW,
+			TO_CHAR(TO_DATE(A.APY_DT_FROM), 'YYYY-MM-DD') AS APY_DT_FROM_VIEW,
+			TO_CHAR(TO_DATE(A.APY_DT_TO), 'YYYY-MM-DD') AS APY_DT_TO_VIEW,
+			TO_CHAR(TO_DATE(A.COST_DT_FROM), 'YYYY-MM-DD') AS COST_DT_FROM_VIEW,
+			TO_CHAR(TO_DATE(A.COST_DT_TO), 'YYYY-MM-DD') AS COST_DT_TO_VIEW,
+			GET_USER_NAME(A.WRITER) AS WRITER_NM
+      FROM CF_USER_CHANGE A, (SELECT * FROM JF_COMMON_CODE WHERE GROUP_CODE='DBA_REVW') B
+     WHERE A.DBA_CHECK_CD = B.COMMON_CODE
+	   AND INST_ID=#{INST_ID} 
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_CHANGE_ATTACH"
+		parameterType="hashMap" resultType="ExpressMap">
+	SELECT * FROM CF_USER_CHANGE_ATTACH
+	WHERE INST_ID=#{INST_ID} 
+	ORDER BY CHANGE_ATTACH_SEQ		
+	</select>
+	
+	
+	<select id="RequestInfoGetAction_CF_USER_DBA_ATTACH"
+		parameterType="hashMap" resultType="ExpressMap">
+	SELECT * FROM CF_USER_DBA_ATTACH
+	WHERE INST_ID=#{INST_ID} 
+	ORDER BY DBA_ATTACH_SEQ		
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_REQUEST_DETAIL_INFO"
+		parameterType="hashMap" resultType="ExpressMap">
+    SELECT A.*
+      FROM CF_USER_REQUEST_DETAIL_INFO  A
+	 WHERE INST_ID=#{INST_ID}
+	 ORDER BY REQUEST_DETAIL_SEQ
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_WORK_ATTACH"
+		parameterType="hashMap" resultType="ExpressMap">
+	SELECT A.*
+	 		, (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='SITE_TARGETDB_CLASS' AND COMMON_CODE=A.TARGETDB) AS TARGETDB_NM
+	 		, (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='SITE_ORIGINSERVER_CLASS' AND COMMON_CODE=A.TARGET_SERVER) AS TARGET_SERVER_NM
+            , (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='SITE_ORIGINSERVER_CLASS' AND COMMON_CODE=A.ORIGINAL_SERVER) AS ORIGINAL_SERVER_NM
+            , (SELECT COMMON_NAME FROM JF_COMMON_CODE WHERE GROUP_CODE='SITE_COPYSERVER_CLASS' AND COMMON_CODE=A.COPY_SERVER) AS COPY_SERVER_NM
+	  FROM CF_USER_WORK_ATTACH A
+	 WHERE INST_ID=#{INST_ID} 
+	 ORDER BY WORK_ATTACH_SEQ		
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_WORKREVIEW_ATTACH"
+		parameterType="hashMap" resultType="ExpressMap">
+	SELECT * FROM CF_USER_WORKREVIEW_ATTACH
+	WHERE INST_ID=#{INST_ID} 
+	ORDER BY WORKREVIEW_ATTACH_SEQ		
+	</select>
+	
+	<select id="RequestInfoGetAction_CF_USER_REQUEST_DETAIL"
+		parameterType="hashMap" resultType="ExpressMap">
+    SELECT A.*
+      FROM CF_USER_REQUEST_DETAIL  A
+	 WHERE INST_ID=#{PAR_INST_ID}
+	</select>
+	
+	<delete id="RequestInfoGetAction_deleteByWork_CF_USER_REQUEST_DETAIL">
+	delete from CF_USER_REQUEST_DETAIL 
+	where INST_ID=#{INST_ID}
+	</delete>	
+	
+	<select id="RequestInfoGetAction_CF_USER_RECEIVE_ATTACH" parameterType="hashMap" resultType="ExpressMap">
+	SELECT 
+			A.*
+			, GET_USER_NAME(WRITER) AS WRITER_NM
+	FROM CF_USER_RECEIVE_ATTACH A
+	WHERE INST_ID = #{PAR_INST_ID} 
+	</select>
+<update id="com_site_common_updateDocNo" >
+	UPDATE CF_USER_REQUEST SET DOC_NO = to_char(get_sysdate(),'yyyyMMddHH24miss') where DOC_NO is null AND INST_ID=#{INST_ID}
+</update>
+	<select id="com_site_common_selectCfUserChangeList" parameterType="hashMap" resultType="ExpressMap">
+		SELECT
+		B.PAR_INST_ID,
+		A.INST_ID,
+		GET_WORK_PARTICIPANT_NAME(B.WORK_ID)  PARTICIPANT_NAME,
+		CHANGE_TITLE,
+		GET_USER_NAME(A.WRITER) AS  PERFORMER_USER_NAME,
+		A.WRITE_DT AS PERFORMER_FINISHED_DT,
+		A.COST_DT_FROM AS COST_DT_FROM,
+		A.COST_DT_TO AS COST_DT_TO,
+		A.WRITER,
+		B.PROC_ID,
+		B.PROC_VER_ID,
+		C.ACT_ID 
+		  FROM CF_USER_CHANGE A, WF_PROC_INSTANCE B, WF_WORKLIST C
+		 WHERE A.INST_ID = #{INST_ID}
+		   AND A.INST_ID = B.INST_ID 
+		   AND B.WORK_ID=C.WORK_ID
+	</select>
+	
+	<select id="com_gtone_wfclient_work_findSubRequestByWorkReview" parameterType="hashMap" resultType="ExpressMap">
+		SELECT PAR_INST_ID, P.INST_ID ,GET_WORK_PARTICIPANT_NAME(W.WORK_ID) PARTICIPANT_NAME,
+  		A.ACT_NAME,WORK_FINISHED_DT,INST_START_USER_NAME,INST_START_DT,INST_TYPE_CD,
+  		P.PROC_ID,P.PROC_VER_ID,PAR_INST_ACT_ID, W.ACT_ID, CRE_TRS_ID ,W.WORK_ID,WORK_STATUS_CD, C.WORKREVIEW_TITLE
+  		FROM WF_PROC_INSTANCE P, WF_WORKLIST W, WF_ACT A, CF_USER_WORKREVIEW C
+  		WHERE P.PAR_INST_ID=#{INST_ID} AND P.PAR_INST_ID != P.INST_ID AND P.WORK_ID=W.WORK_ID AND W.ACT_ID=A.ACT_ID AND P.INST_ID = C.INST_ID
+	</select>
+	
+	
+	<select id="RequestInfoGetAction_selectMaxHr_CF_USER_CHANGE"
+		parameterType="hashMap" resultType="ExpressMap">
+		SELECT MIN(HR) AS MAXHR
+		  FROM CF_USER_CHANGE
+		 WHERE INST_ID = #{INST_ID}
+	</select>
+	
+		<select id="RequestInfoGetAction_selectCostDt_CF_USER_CHANGE"
+		parameterType="hashMap" resultType="ExpressMap">
+		SELECT MIN(COST_DT_FROM) AS MIN_FORM_DT, MAX(COST_DT_TO) AS MAX_TO_DT
+		  FROM CF_USER_CHANGE
+		 <!-- WHERE INST_ID IN (SELECT INST_ID FROM WF_PROC_INSTANCE WHERE PAR_INST_ID = #{INST_ID} AND INST_ID != #{INST_ID}) -->
+		 WHERE INST_ID = #{INST_ID}
+	</select>
+	<delete id="RequestInfoGetAction_deleteByWork_CF_USER_CHANGE">
+	delete from CF_USER_CHANGE 
+	where INST_ID=#{INST_ID} AND WRITER=#{SESS_USER_ID}
+	</delete>	
+	<delete id="RequestInfoGetAction_deleteByWork_CF_USER_CHANGE_ATTACH">
+	delete from CF_USER_CHANGE_ATTACH 
+	where INST_ID=#{INST_ID} AND WRITER=#{SESS_USER_ID}
+	</delete>
+	<!-- 디폴트 다음결재자 조회 쿼리 샘플입니다.
+	<sql id="RequestInfoGetAction_NextApprUserDefault_common">
+		SELECT U.USER_ID, 
+		       U.LOGIN_ID, 
+		       D.DEP_TITLE,
+		       U.USER_NM,
+               C.DISPLAY_NM AS POSITION,
+               'checked' SELECTED,
+		       U.DEP_ID
+		  FROM C_USER U LEFT OUTER JOIN C_CD_NM C ON (U.POSITION_CODE=C.CD_ID  AND C.LANG_CD='ko-KR'),
+               C_USER_GROUP_ROLE B, C_GROUP_ROLE_BIZ_AUTH A, C_DEP_INFO D
+	   	 WHERE A.BIZ_ID=#{BIZ_ID} 
+	   	   AND U.DEL_YN!='Y'
+	   	   AND U.DEP_ID=D.DEP_ID
+	   	   AND U.USER_ID=B.USER_ID 
+	   	   AND B.GROUP_ID=A.GROUP_ID 
+	   	   AND B.ROLE_ID=A.ROLE_ID
+		</sql>
+		
+		<select id="RequestInfoGetAction_NextApprUserDefault_REQ02" parameterType="hashMap" resultType="ExpressMap">
+		<include refid="RequestInfoGetAction_NextApprUserDefault_common"/>
+		   AND B.ROLE_ID = 44
+		   AND U.DEP_ID = 
+		       (SELECT dep_id 
+		         FROM C_USER 
+		        WHERE user_id = #{SESS_USER_ID}
+		       )
+		</select>
+	-->
+	<select id="MetaRestController_getSrList" parameterType="hashMap" resultType="ExpressMap">
+		SELECT * FROM CF_USER_REQUEST a, WF_PROC_INSTANCE b
+		WHERE a.INST_ID=b.INST_ID
+		AND b.INST_STATUS_CD NOT IN ('FINISHED','DELETED')
+		<if test="BIZ_ID != null and BIZ_ID !=''">
+		AND a.BIZ_ID = #{BIZ_ID}
+		</if>
+	</select>	
+	<select id="MetaRestController_getBizList" parameterType="hashMap" resultType="ExpressMap">
+		SELECT A.*, B.PKG_ID, B.PAR_BIZ_ID, C.DEP_ID, D.DEP_TITLE, DECODE(B1.CHAR_BIZ_CNT, NULL, 0, 1) AS HAS_ITEM,
+			   CASE WHEN B.PAR_BIZ_ID=0 THEN '' ELSE GET_BIZ_NAME(B.PAR_BIZ_ID) END PAR_BIZ_NM 
+			FROM C_BIZ A
+				LEFT OUTER JOIN (SELECT PAR_BIZ_ID, COUNT(BIZ_ID) AS CHAR_BIZ_CNT 
+		                          FROM C_PKG_BIZ_MAP 
+		                         GROUP BY PAR_BIZ_ID) B1
+		                    ON A.BIZ_ID = B1.PAR_BIZ_ID
+			, C_PKG_BIZ_MAP B, C_BIZ_DEP_MAP C, C_DEP_INFO D
+			WHERE A.BIZ_ID=B.BIZ_ID AND A.BIZ_ID=C.BIZ_ID AND C.DEP_ID=D.DEP_ID
+				AND NVL(A.DEL_YN,'N')='N'
+		ORDER BY A.BIZ_NM
+	</select>	
+</mapper>
